@@ -1,0 +1,86 @@
+# -------------------------
+# General OS cruft
+# -------------------------
+.DS_Store
+Thumbs.db
+
+# -------------------------
+# CMake build artifacts
+# -------------------------
+build/
+out/
+CMakeCache.txt
+CMakeFiles/
+*.cmake.build
+*.cmake.clean
+Testing/
+
+# If you generate an install folder:
+install/
+
+# If you’re using in-source builds (not recommended), ignore these:
+cmake_install.cmake
+Makefile
+
+# -------------------------
+# Visual Studio & Tools
+# -------------------------
+# Visual Studio temporary files
+*.vcxproj.user
+*.vcxproj.filters
+*.vcxproj.*
+*.sln
+*.suo
+*.opensdf
+*.sdf
+*.ipch
+*.pdb
+*.obj
+*.idb
+*.log
+*.tlog
+*.lastbuildstate
+*.VC.db
+*.VC.opendb
+*.ilk
+*.pch
+
+# Visual Studio Code workspace/settings (optional)
+.vscode/
+*.code-workspace
+
+# If you have a .vs folder with workspace data:
+.vs/
+
+# -------------------------
+# Executables & Libraries
+# -------------------------
+*.exe
+*.dll
+*.lib
+*.so
+*.dylib
+*.a
+
+# -------------------------
+# Qt-specific build artifacts
+# -------------------------
+moc_*.cpp
+qrc_*.cpp
+ui_*.h
+*_autogen/
+.qmake.stash
+*.qrc.dep
+*.qmlc
+*.jsc
+*.qml.layout
+*.qmlproject.user
+
+# -------------------------
+# Other typical ignores
+# -------------------------
+*.log
+*.cache
+*.swp
+*.bak
+*~
