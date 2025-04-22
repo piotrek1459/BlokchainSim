@@ -23,7 +23,9 @@ add_executable(BlokchainSim
     Blockchain/Blockchain.h
     UI/mainwindow.cpp
     UI/mainwindow.h
-)
+    Node/Node.h 
+    Node/FullNode.h 
+    Node/MinerNode.h)
 
 # 3) Set C++ standard (C++20)
 if (CMAKE_VERSION VERSION_GREATER 3.12)
