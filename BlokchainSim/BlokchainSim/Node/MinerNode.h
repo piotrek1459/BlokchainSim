@@ -8,8 +8,10 @@
 class MinerNode : public Node
 {
 public:
-    MinerNode(unsigned int difficulty = 2)
-        : m_difficulty(difficulty), m_mining(false) {
+    MinerNode(Blockchain& chain, unsigned int difficulty = 2)
+        : Node(chain),
+        m_difficulty(difficulty),
+        m_mining(false) {
     }
 
     void createBlock(const std::string& data) override {
@@ -21,8 +23,8 @@ public:
             &MinerNode::mineBlock,
             this,
             b);
+
         // Wait for the mining to finish
-        //Block minedBlock = fut.get();
         Block minedBlock = m_blockchain.mineBlock(b, m_difficulty);
         m_mining.store(false);
 

@@ -6,7 +6,7 @@
 class Node
 {
 public:
-    Node() = default;
+    explicit Node(Blockchain& chain) : m_blockchain(chain) {}
     virtual ~Node() = default;
 
     // Retrieve the local blockchain
@@ -16,7 +16,7 @@ public:
     virtual void createBlock(const std::string& data) = 0;
 
 protected:
-    Blockchain m_blockchain;
+    Blockchain& m_blockchain;
 };
 
 #endif // NODE_H

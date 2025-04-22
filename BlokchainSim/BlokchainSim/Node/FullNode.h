@@ -6,8 +6,7 @@
 class FullNode : public Node
 {
 public:
-    FullNode() = default;
-    virtual ~FullNode() = default;
+    explicit FullNode(Blockchain& chain) : Node(chain) {}
 
     // Just make a block and add it (no proof-of-work)
     void createBlock(const std::string& data) override {

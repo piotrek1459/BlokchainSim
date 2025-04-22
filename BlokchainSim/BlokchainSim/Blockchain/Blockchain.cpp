@@ -1,5 +1,6 @@
 #include "Blockchain.h"
-
+#include "Transaction.h"
+#include <iostream>
 Blockchain::Blockchain()
 {
     // Insert the “genesis” block
@@ -18,6 +19,16 @@ void Blockchain::addBlock(const Block& b)
 
 void Blockchain::addBlock(const std::string& data)
 {
+    try {
+        Transaction tx = Transaction::parse(data);
+        std::cout << "Parsed TX  " << tx.from
+            << " -> " << tx.to
+            << " : " << tx.amount << '\n';
+    }
+    catch (const std::exception&) {
+        std::cout << "Raw data   " << data << '\n';
+    }
+
     Block candidate = createNextBlock(data);
     Block mined = mineBlock(candidate, kDefaultDifficulty);
     m_chain.push_back(mined);
@@ -26,20 +37,12 @@ void Blockchain::addBlock(const std::string& data)
 bool Blockchain::isChainValid() const
 {
     for (size_t i = 1; i < m_chain.size(); ++i) {
-        const Block& curr = m_chain[i];
-        const Block& prev = m_chain[i - 1];
-
-        // Recalculate the hash and compare
-        if (curr.calculateHash() != curr.getHash()) {
+        if (!verifyBlock(m_chain[i], m_chain[i - 1].getHash()))
             return false;
-        }
-        // Check previous hash pointer
-        if (curr.getPrevHash() != prev.getHash()) {
-            return false;
-        }
     }
     return true;
 }
+
 
 Block Blockchain::createNextBlock(const std::string& data) const
 {
