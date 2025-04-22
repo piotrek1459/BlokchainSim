@@ -63,9 +63,15 @@ void MainWindow::refreshChainDisplay()
     m_listWidget->clear();
     const auto& chain = m_blockchain.getChain();
     for (const auto& block : chain) {
-        QString itemStr = QString("Block %1 | Hash: %2")
+        // Build a more descriptive string
+        QString itemStr = QString("Block %1: \n  Timestamp: %2 \n  Nonce: %3 \n  Data: %4 \n  PrevHash: %5 \n  Hash: %6")
             .arg(block.getIndex())
+            .arg(block.getTimestamp())
+            .arg(block.getNonce())
+            .arg(QString::fromStdString(block.getData()))
+            .arg(QString::fromStdString(block.getPrevHash()))
             .arg(QString::fromStdString(block.getHash()));
         m_listWidget->addItem(itemStr);
     }
 }
+
