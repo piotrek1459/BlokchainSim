@@ -27,6 +27,16 @@ add_executable(BlokchainSim
     Node/FullNode.h 
     Node/MinerNode.h)
 
+target_sources(BlokchainSim PRIVATE
+    Blockchain/Transaction.h
+    Blockchain/FileManager.h
+    Blockchain/ChainStats.h
+    Blockchain/concepts.hpp
+)
+
+target_include_directories(BlokchainSim PRIVATE nlohmann)
+
+
 # 3) Set C++ standard (C++20)
 if (CMAKE_VERSION VERSION_GREATER 3.12)
     set_property(TARGET BlokchainSim PROPERTY CXX_STANDARD 20)

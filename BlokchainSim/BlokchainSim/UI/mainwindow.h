@@ -16,6 +16,7 @@ public:
 private slots:
     void onAddBlockClicked();
     void onValidateChainClicked();
+    void onSaveChainClicked();
 
 private:
     Blockchain m_blockchain;
@@ -24,6 +25,7 @@ private:
     QListWidget* m_listWidget;
     QPushButton* m_addBlockButton;
     QPushButton* m_validateButton;
+    QPushButton* m_saveButton;
 
     void refreshChainDisplay();
 };
