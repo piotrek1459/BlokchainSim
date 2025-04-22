@@ -27,6 +27,7 @@ private:
     QPushButton* m_validateButton;
     QPushButton* m_saveButton;
 
+    void updateStatusBar();
     void refreshChainDisplay();
 };
 

@@ -2,7 +2,9 @@
 #include <QVBoxLayout>
 #include <QInputDialog>
 #include <QMessageBox>
+#include <QStatusBar>
 #include "../Blockchain/FileManager.h"
+#include "../Blockchain/ChainStats.h"
 
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent)
@@ -37,6 +39,7 @@ MainWindow::MainWindow(QWidget* parent)
 
     // Refresh display initially
     refreshChainDisplay();
+    updateStatusBar();
 }
 
 MainWindow::~MainWindow()
@@ -64,6 +67,15 @@ void MainWindow::onValidateChainClicked()
         valid ? "Blockchain is VALID" : "Blockchain is INVALID");
 }
 
+void MainWindow::updateStatusBar()      // NEW
+{
+    using namespace std::string_literals;
+    auto stats = ChainStats::compute(m_blockchain);
+        statusBar()->showMessage(
+            QString("Blocks: %1 | Avg nonce: %2")
+            .arg(m_blockchain.getChain().size())
+            .arg(stats.averageNonce, 0, 'f', 1));
+}
 
 void MainWindow::onSaveChainClicked()
 {
@@ -91,5 +103,6 @@ void MainWindow::refreshChainDisplay()
             .arg(QString::fromStdString(block.getHash()));
         m_listWidget->addItem(itemStr);
     }
+	updateStatusBar();
 }
 
