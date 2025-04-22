@@ -24,11 +24,9 @@ public:
             this,
             b);
 
-        // Wait for the mining to finish
-        Block minedBlock = m_blockchain.mineBlock(b, m_difficulty);
+        // Wait for the mining to finish and add the result
+        Block minedBlock = fut.get();
         m_mining.store(false);
-
-        // Add mined block to chain
         m_blockchain.addBlock(minedBlock);
     }
 

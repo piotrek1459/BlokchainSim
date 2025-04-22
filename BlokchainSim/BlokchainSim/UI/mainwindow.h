@@ -23,7 +23,6 @@ private slots:
     void onSaveChainClicked();
 
 private:
-    Blockchain m_blockchain;
     Blockchain m_chain;                      // single ledger
     FullNode  m_fullNode{ m_chain };
     MinerNode m_minerNode{ m_chain, 2 };   
