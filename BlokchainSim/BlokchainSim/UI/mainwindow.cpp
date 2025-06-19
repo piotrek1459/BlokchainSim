@@ -27,6 +27,9 @@ MainWindow::MainWindow(QWidget* parent)
     m_saveButton = new QPushButton("Save Chain", this);
     m_powCheck = new QCheckBox("Proof‑of‑Work (mining)", this);
     m_powCheck->setChecked(true);          // default ON
+	m_diffBox = new QSpinBox(this);
+	m_diffBox->setRange(1, 6);
+	m_diffBox->setValue(2);                // default difficulty
 
     // Add to layout
     layout->addWidget(m_listWidget);
@@ -34,6 +37,7 @@ MainWindow::MainWindow(QWidget* parent)
     layout->addWidget(m_validateButton);
     layout->addWidget(m_saveButton);
     layout->addWidget(m_powCheck);
+	layout->addWidget(m_diffBox);
 
     setCentralWidget(central);
 
@@ -46,6 +50,8 @@ MainWindow::MainWindow(QWidget* parent)
 
     connect(m_saveButton, &QPushButton::clicked,
         this, &MainWindow::onSaveChainClicked);
+
+	connect(m_diffBox, QOverload<int>::of(&QSpinBox::valueChanged), this, &MainWindow::onDifficultyChanged);
 
     connect(m_powCheck, &QCheckBox::toggled, [this](bool on) {
         m_activeNode = on ? static_cast<Node*>(&m_minerNode) : static_cast<Node*>(&m_fullNode);
@@ -63,32 +69,50 @@ MainWindow::~MainWindow()
 
 void MainWindow::onAddBlockClicked()
 {
-    bool ok;
+    bool   ok;
     QString data = QInputDialog::getText(
         this, tr("Add New Block"),
-        tr("Block Data:"),
-        QLineEdit::Normal,
-        "", &ok);
+        tr("Block Data:"), QLineEdit::Normal, "", &ok);
 
     if (!ok || data.isEmpty())
-        return;                                   
+        return;
 
-    try {
-        // 1. validate pattern  → throws if not OK
+    try
+    {
+        // 1. regex validation (throws on failure)
         Transaction::parse(data.toStdString());
-
-        // 2. add via polymorphic Node
-        m_activeNode->createBlock(data.toStdString());
-        refreshChainDisplay();
     }
-    catch (const std::exception&) {
+    catch (const std::exception&)
+    {
         QMessageBox::warning(this,
             "Invalid transaction",
             "Input must follow the pattern:\n"
             "<sender>-><receiver>:<amount>\n\n"
             "Example:  Alice->Bob:50");
+        return;
     }
+
+    /* ---------- launch mining asynchronously -------------------------- */
+    m_addBlockButton->setEnabled(false);
+    statusBar()->showMessage(QString("Mining… (difficulty %1)")
+        .arg(m_diffBox->value()));
+
+    // Start background task
+    m_miningFuture = std::async(std::launch::async, [this, str = data.toStdString()]()
+        {
+            m_activeNode->createBlock(str);
+        });
+
+    // Poll future via QTimer (create once)
+    if (!m_miningTimer)
+    {
+        m_miningTimer = new QTimer(this);
+        connect(m_miningTimer, &QTimer::timeout,
+            this, &MainWindow::checkMiningProgress);
+    }
+    m_miningTimer->start(100);   // poll every 100 ms
 }
+
 
 
 void MainWindow::onValidateChainClicked()
@@ -107,6 +131,12 @@ void MainWindow::updateStatusBar()      // NEW
         .arg(m_activeNode->getBlockchain().getChain().size())
         .arg(stats.averageNonce, 0, 'f', 1));
 }
+
+void MainWindow::onDifficultyChanged(int d)
+{
+    m_minerNode.setDifficulty(static_cast<unsigned>(d));
+}
+
 
 void MainWindow::onSaveChainClicked()
 {
@@ -136,4 +166,26 @@ void MainWindow::refreshChainDisplay()
     }
     updateStatusBar();
 }
+
+void MainWindow::checkMiningProgress()
+{
+    if (m_miningFuture.valid() &&
+        m_miningFuture.wait_for(std::chrono::seconds(0))
+        == std::future_status::ready)
+    {
+        try { m_miningFuture.get(); }          // re-throw if task failed
+        catch (const std::exception& ex)
+        {
+            QMessageBox::critical(this,
+                "Mining error", ex.what());
+        }
+
+        m_miningTimer->stop();
+        statusBar()->clearMessage();
+        m_addBlockButton->setEnabled(true);
+
+        refreshChainDisplay();                 // show new block + stats
+    }
+}
+
 
