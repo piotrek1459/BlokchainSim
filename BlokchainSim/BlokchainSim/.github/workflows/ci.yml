@@ -1,0 +1,58 @@
+name: C++ CI
+
+on:
+  push:
+  pull_request:
+
+env:
+  BUILD_TYPE: Release          # change to Debug if you prefer
+
+jobs:
+  build_and_test:
+    name: ${{ matrix.os }} / ${{ env.BUILD_TYPE }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest]
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    # ---- Install dependencies ------------------------------------------------
+    - name: Install packages (Ubuntu)
+      if: runner.os == 'Linux'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y qt6-base-dev libssl-dev ninja-build
+
+    - name: Setup MSVC (Windows)
+      if: runner.os == 'Windows'
+      uses: ilammy/msvc-dev-cmd@v1         # sets up cl, link, etc.
+
+    # ---- Configure -----------------------------------------------------------
+    - name: Configure CMake
+      run: |
+        cmake -B build -G "Ninja" \
+          -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }} \
+          -DCMAKE_INSTALL_PREFIX=install
+      shell: bash
+
+    # ---- Build ---------------------------------------------------------------
+    - name: Build
+      run: cmake --build build --config ${{ env.BUILD_TYPE }}
+      shell: bash
+
+    # ---- Unit tests ----------------------------------------------------------
+    - name: Run tests
+      run: ctest --test-dir build --output-on-failure -C ${{ env.BUILD_TYPE }}
+      shell: bash
+
+    # ---- Store results (optional) -------------------------------------------
+    - name: Upload test binaries
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-executables-${{ matrix.os }}
+        path: |
+          build/tests*
