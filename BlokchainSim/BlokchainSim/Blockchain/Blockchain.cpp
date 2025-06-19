@@ -1,9 +1,9 @@
-#include "Blockchain.h"
+﻿#include "Blockchain.h"
 #include "Transaction.h"
 #include <iostream>
 Blockchain::Blockchain()
 {
-    // Insert the �genesis� block
+    // Insert the “genesis” block
     m_chain.push_back(createGenesisBlock());
 }
 
@@ -34,15 +34,52 @@ void Blockchain::addBlock(const std::string& data)
     m_chain.push_back(mined);
 }
 
+// ------------------------------------------------------------------
+//  Strong validation ─ checks data integrity + link + optional PoW.
+// ------------------------------------------------------------------
 bool Blockchain::isChainValid() const
 {
-    for (size_t i = 1; i < m_chain.size(); ++i) {
-        if (!verifyBlock(m_chain[i], m_chain[i - 1].getHash()))
+    constexpr bool CHECK_POW = true;                 // toggle if desired
+    constexpr unsigned POW_DIFFICULTY = kDefaultDifficulty;
+
+    const std::string powTarget(POW_DIFFICULTY, '0');
+
+    for (std::size_t i = 0; i < m_chain.size(); ++i)
+    {
+        const Block& blk = m_chain[i];
+
+        // 1) Hash must be internally consistent
+        std::string recalculated = blk.calculateHash();
+        if (recalculated != blk.getHash())
+        {
+            std::cerr << "[Invalid] Block " << i
+                << " stored hash mismatch.\n";
             return false;
+        }
+
+        // 2) Optional PoW rule
+        if (CHECK_POW && blk.getHash().substr(0, POW_DIFFICULTY) != powTarget && i > 0 && blk.getNonce() != 0)
+        {
+            std::cerr << "[Invalid] Block " << i
+                << " fails POW difficulty.\n";
+            return false;
+        }
+
+        // 3) prevHash pointer valid (skip genesis)
+        if (i > 0)
+        {
+            const Block& prev = m_chain[i - 1];
+            if (blk.getPrevHash() != prev.getHash())
+            {
+                std::cerr << "[Invalid] Block " << i
+                    << " prevHash does not match block "
+                    << (i - 1) << ".\n";
+                return false;
+            }
+        }
     }
     return true;
 }
-
 
 Block Blockchain::createNextBlock(const std::string& data) const
 {

@@ -10,6 +10,12 @@
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent)
 {
+
+    //Load persistent chain BEFORE constructing nodes
+    m_chain = FileManager::load();
+    qDebug() << "Loaded ledger from" << QString::fromStdString(FileManager::defaultPath().string());
+
+
     // Create central widget + layout
     QWidget* central = new QWidget(this);
     QVBoxLayout* layout = new QVBoxLayout(central);
