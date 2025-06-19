@@ -11,8 +11,9 @@ public:
     MinerNode(Blockchain& chain, unsigned int difficulty = 2)
         : Node(chain),
         m_difficulty(difficulty),
-        m_mining(false) {
-    }
+        m_mining(false) {}
+
+    void setDifficulty(unsigned int d) { m_difficulty = d; }
 
     void createBlock(const std::string& data) override {
         Block b = m_blockchain.createNextBlock(data);
