@@ -50,8 +50,10 @@ jobs:
       run: |
         cmake -S "$SOURCE_DIR" -B build -G Ninja \
               -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
-              -DCMAKE_PREFIX_PATH="$QT_ROOT"
+              -DCMAKE_PREFIX_PATH="$QT_ROOT" \
+              -DQt6_DIR="$QT_ROOT/lib/cmake/Qt6"        # ← NEW
       shell: bash
+
 
     # ---- build -------------------------------------------------------------
     - name: Build
