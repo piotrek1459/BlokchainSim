@@ -10,29 +10,25 @@ jobs:
       fail-fast: false
       matrix:
         os: [windows-latest, ubuntu-latest]
-        build_type: [Release]         # add Debug if you wish
+        build_type: [Release]
 
     name: ${{ matrix.os }} / ${{ matrix.build_type }}
     runs-on: ${{ matrix.os }}
-
     env:
-      SOURCE_DIR: BlokchainSim/BlokchainSim   # <── your CMakeLists.txt lives here
+      SOURCE_DIR: BlokchainSim/BlokchainSim     # nested CMakeLists
 
-    # ----------------------------------------------------------
-    # 0) Checkout repository
-    # ----------------------------------------------------------
     steps:
+    # ---- checkout ----------------------------------------------------------
     - uses: actions/checkout@v4
 
-    # ----------------------------------------------------------
-    # 1) Dependencies
-    # ----------------------------------------------------------
+    # ---- Linux dependencies ------------------------------------------------
     - name: Install packages (Ubuntu)
       if: runner.os == 'Linux'
       run: |
         sudo apt-get update
         sudo apt-get install -y ninja-build libssl-dev qt6-base-dev
 
+    # ---- Windows toolchain -------------------------------------------------
     - name: Setup MSVC (Windows)
       if: runner.os == 'Windows'
       uses: ilammy/msvc-dev-cmd@v1
@@ -42,12 +38,12 @@ jobs:
       shell: pwsh
       run: |
         pip install aqtinstall
-        aqt install-qt windows desktop 6.6.2 win64_msvc2019_64 -m qtbase
-        echo "QT_ROOT=$PWD/Qt/6.6.2/msvc2019_64" | Out-File -FilePath $env:GITHUB_ENV -Append
+        # Qt ≥6.6 ships essentials in one bundle → no "-m qtbase"
+        aqt install-qt windows desktop 6.6.2 win64_msvc2019_64
+        echo "QT_ROOT=$PWD/Qt/6.6.2/msvc2019_64" | `
+             Out-File -FilePath $env:GITHUB_ENV -Append
 
-    # ----------------------------------------------------------
-    # 2) Configure (points at nested SOURCE_DIR)
-    # ----------------------------------------------------------
+    # ---- configure ---------------------------------------------------------
     - name: Configure CMake
       run: |
         cmake -S "$SOURCE_DIR" -B build -G Ninja \
@@ -55,16 +51,12 @@ jobs:
               -DCMAKE_PREFIX_PATH="$QT_ROOT"
       shell: bash
 
-    # ----------------------------------------------------------
-    # 3) Build
-    # ----------------------------------------------------------
+    # ---- build -------------------------------------------------------------
     - name: Build
       run: cmake --build build --config ${{ matrix.build_type }}
       shell: bash
 
-    # ----------------------------------------------------------
-    # 4) Unit tests
-    # ----------------------------------------------------------
+    # ---- test --------------------------------------------------------------
     - name: Run unit tests
-      run: ctest -C ${{ matrix.build_type }} --test-dir build --output-on-failure
+      run: ctest --test-dir build -C ${{ matrix.build_type }} --output-on-failure
       shell: bash
