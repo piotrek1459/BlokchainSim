@@ -38,10 +38,12 @@ jobs:
       shell: pwsh
       run: |
         pip install aqtinstall
-        # Qt ≥6.6 ships essentials in one bundle → no "-m qtbase"
         aqt install-qt windows desktop 6.6.2 win64_msvc2019_64
-        echo "QT_ROOT=$PWD/Qt/6.6.2/msvc2019_64" | `
-             Out-File -FilePath $env:GITHUB_ENV -Append
+        $qt = "$PWD/Qt/6.6.2/msvc2019_64"
+        # make both variables available to later steps
+        echo "QT_ROOT=$qt"              >> $env:GITHUB_ENV
+        echo "Qt6_DIR=$qt/lib/cmake/Qt6" >> $env:GITHUB_ENV
+
 
     # ---- configure ---------------------------------------------------------
     - name: Configure CMake
