@@ -15,52 +15,56 @@ jobs:
     name: ${{ matrix.os }} / ${{ matrix.build_type }}
     runs-on: ${{ matrix.os }}
     env:
-      SOURCE_DIR: BlokchainSim/BlokchainSim     # nested CMakeLists
+      SOURCE_DIR: BlokchainSim/BlokchainSim   # <- your nested CMakeLists
 
     steps:
-    # ---- checkout ----------------------------------------------------------
+    # -----------------------------------------------------------------------
+    # 1) Checkout
+    # -----------------------------------------------------------------------
     - uses: actions/checkout@v4
 
-    # ---- Linux dependencies ------------------------------------------------
-    - name: Install packages (Ubuntu)
+    # -----------------------------------------------------------------------
+    # 2) Dependencies
+    # -----------------------------------------------------------------------
+    - name: Install Ubuntu packages
       if: runner.os == 'Linux'
       run: |
         sudo apt-get update
         sudo apt-get install -y ninja-build libssl-dev qt6-base-dev
 
-    # ---- Windows toolchain -------------------------------------------------
     - name: Setup MSVC (Windows)
       if: runner.os == 'Windows'
       uses: ilammy/msvc-dev-cmd@v1
 
-    - name: Install Qt 6 on Windows via aqt
+    # ---- Qt for Windows: use official install-qt-action -------------------
+    - name: Install Qt (Windows)
       if: runner.os == 'Windows'
-      shell: pwsh
-      run: |
-        pip install aqtinstall
-        aqt install-qt windows desktop 6.6.2 win64_msvc2019_64
-        $qt = "$PWD/Qt/6.6.2/msvc2019_64"
-        # make both variables available to later steps
-        echo "QT_ROOT=$qt"              >> $env:GITHUB_ENV
-        echo "Qt6_DIR=$qt/lib/cmake/Qt6" >> $env:GITHUB_ENV
+      uses: jurplel/install-qt-action@v3
+      with:
+        version: 6.6.2           # or 6.7.0 etc.
+        arch: win64_msvc2019_64  # matches MSVC toolset
+        cache: true              # speeds up subsequent builds
 
-
-    # ---- configure ---------------------------------------------------------
+    # install-qt-action sets Qt6_DIR and adds Qt to PATH automatically
+    # -----------------------------------------------------------------------
+    # 3) Configure
+    # -----------------------------------------------------------------------
     - name: Configure CMake
       run: |
         cmake -S "$SOURCE_DIR" -B build -G Ninja \
-              -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
-              -DCMAKE_PREFIX_PATH="$QT_ROOT" \
-              -DQt6_DIR="$QT_ROOT/lib/cmake/Qt6"        # ← NEW
+              -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
       shell: bash
 
-
-    # ---- build -------------------------------------------------------------
+    # -----------------------------------------------------------------------
+    # 4) Build
+    # -----------------------------------------------------------------------
     - name: Build
       run: cmake --build build --config ${{ matrix.build_type }}
       shell: bash
 
-    # ---- test --------------------------------------------------------------
+    # -----------------------------------------------------------------------
+    # 5) Test
+    # -----------------------------------------------------------------------
     - name: Run unit tests
       run: ctest --test-dir build -C ${{ matrix.build_type }} --output-on-failure
       shell: bash
