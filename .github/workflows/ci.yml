@@ -5,10 +5,11 @@ on:
   pull_request:
 
 env:
-  BUILD_TYPE: Release          # change to Debug if you prefer
+  BUILD_TYPE: Release         # Global env variable available to every step
 
 jobs:
   build_and_test:
+    # ---- Job label (cannot use env.* here) ----
     name: ${{ matrix.os }} / ${{ env.BUILD_TYPE }}
     runs-on: ${{ matrix.os }}
     strategy:
@@ -20,7 +21,9 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v4
 
-    # ---- Install dependencies ------------------------------------------------
+    # -------------------------------------------
+    # Install dependencies
+    # -------------------------------------------
     - name: Install packages (Ubuntu)
       if: runner.os == 'Linux'
       run: |
@@ -29,9 +32,11 @@ jobs:
 
     - name: Setup MSVC (Windows)
       if: runner.os == 'Windows'
-      uses: ilammy/msvc-dev-cmd@v1         # sets up cl, link, etc.
+      uses: ilammy/msvc-dev-cmd@v1
 
-    # ---- Configure -----------------------------------------------------------
+    # -------------------------------------------
+    # Configure with CMake
+    # -------------------------------------------
     - name: Configure CMake
       run: |
         cmake -B build -G "Ninja" \
@@ -39,20 +44,25 @@ jobs:
           -DCMAKE_INSTALL_PREFIX=install
       shell: bash
 
-    # ---- Build ---------------------------------------------------------------
+    # -------------------------------------------
+    # Build
+    # -------------------------------------------
     - name: Build
-      run: cmake --build build --config ${{ env.BUILD_TYPE }}
+      run: cmake --build build --config $BUILD_TYPE
       shell: bash
 
-    # ---- Unit tests ----------------------------------------------------------
+    # -------------------------------------------
+    # Unit tests
+    # -------------------------------------------
     - name: Run tests
-      run: ctest --test-dir build --output-on-failure -C ${{ env.BUILD_TYPE }}
+      run: ctest --test-dir build --output-on-failure -C $BUILD_TYPE
       shell: bash
 
-    # ---- Store results (optional) -------------------------------------------
+    # -------------------------------------------
+    # Optional: upload test executables
+    # -------------------------------------------
     - name: Upload test binaries
       uses: actions/upload-artifact@v4
       with:
         name: test-executables-${{ matrix.os }}
-        path: |
-          build/tests*
+        path: build/tests*
