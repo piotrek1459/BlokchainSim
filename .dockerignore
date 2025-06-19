@@ -1,0 +1,12 @@
+# ignore local build artifacts & IDE files
+build/
+out/
+.vs/
+.vscode/
+*.o
+*.obj
+*.pdb
+.git
+.gitignore
+Dockerfile
+.github/
