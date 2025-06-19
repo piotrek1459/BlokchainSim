@@ -34,4 +34,34 @@ public:
         }
         std::ofstream(p) << j.dump(2);
     }
+
+    static Blockchain load(const std::filesystem::path& p = defaultPath())
+    {
+        Blockchain chain;                       // already has a genesis block
+        if (!std::filesystem::exists(p))
+            return chain;                       // file missing → OK
+
+        std::ifstream f(p);
+        if (f.peek() == std::ifstream::traits_type::eof())
+            return chain;                       // file empty → keep genesis
+
+        nlohmann::json j;  
+        f >> j;
+        if (j.empty())
+            return chain;                       // parsed but no blocks → keep genesis
+
+        chain.clear();                          // only clear if we really have data
+        for (const auto& e : j)
+        {
+            Block blk(e["index"],
+                e["timestamp"],
+                e["data"],
+                e["prevHash"],
+                e["nonce"],
+                e["hash"]);
+            chain.addBlock(blk);
+        }
+        return chain;
+    }
+
 };

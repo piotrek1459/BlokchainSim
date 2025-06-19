@@ -15,6 +15,7 @@ public:
     void addBlock(const Block& block);
     bool isChainValid() const;
     const std::vector<Block>& getChain() const { return m_chain; }
+    void clear() { m_chain.clear(); }
     Block mineBlock(Block block, unsigned int difficulty) const;
     template<Hashable H>
     static bool verifyBlock(const H& blk, const std::string& prevHash)
