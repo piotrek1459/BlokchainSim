@@ -1,5 +1,4 @@
-Here’s a drop-in **`README.md`** you can copy to the root of the repo.
-It explains—from zero to running—the Docker workflow on Windows (GUI and
+How to run the Docker workflow on Windows (GUI and
 headless) and on any Linux/macOS host.
 
 ---
